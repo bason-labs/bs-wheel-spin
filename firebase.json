@@ -12,6 +12,16 @@
     "rewrites": [
       { "source": "/groups", "destination": "/groups.html" },
       { "source": "/", "destination": "/wheel.html" }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|html)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+      },
+      {
+        "source": "@(/|/groups)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+      }
     ]
   }
 }
