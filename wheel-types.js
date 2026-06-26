@@ -24,3 +24,23 @@ export function makeWheelId() {
   } catch (e) {}
   return (Date.now().toString(36) + Math.random().toString(36).slice(2)).slice(0, 8);
 }
+
+export function landingRotation(curRotation, idx, segCount, rng = Math.random) {
+  const SEG = 360 / segCount;
+  const base = (360 - (idx * SEG + SEG / 2)) % 360;        // brings segment center to top
+  const jitter = (rng() * 2 - 1) * (SEG / 2 - Math.min(8, SEG / 4)); // stay inside the wedge
+  return curRotation + (6 * 360 + base + jitter) - (curRotation % 360);
+}
+
+export function discHtml(segs, rotation) {
+  const n = segs.length;
+  const SEG = 360 / n;
+  const stops = segs
+    .map((s, i) => `${s.dim ? s.color + '33' : s.color} ${i * SEG}deg ${(i + 1) * SEG}deg`)
+    .join(',');
+  const labels = segs.map((s, i) => {
+    const a = (i * SEG + SEG / 2) * Math.PI / 180, r = 31;
+    return `<span class="label${s.dim ? ' dim' : ''}" style="left:${50 + r * Math.sin(a)}%;top:${50 - r * Math.cos(a)}%">${esc(s.label)}</span>`;
+  }).join('');
+  return `<div class="disc" id="disc" style="background:conic-gradient(${stops});transform:rotate(${rotation}deg)">${labels}</div>`;
+}
