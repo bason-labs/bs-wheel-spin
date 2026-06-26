@@ -128,13 +128,14 @@ async function startApp() {
   uid = deviceId();
   connDot.classList.add('on'); connText.textContent = 'Đã kết nối · trực tiếp';
 
-  if (SEED === 'simple') {   // TEMP dev seed — remove in sub-project 3 (admin page supersedes this)
+  // TEMP dev seed — remove in sub-project 3 (admin page supersedes this)
+  const SEED_TITLES = { simple: 'Vòng quay thử nghiệm', topicgroup: 'Vòng quay chủ đề', groupdiv: 'Vòng quay chia nhóm' };
+  if (SEED && WHEEL_TYPES[SEED]) {
     try {
       const cfgRef = ref(db, `wheels/${WID}/config`);
       const snap = await get(cfgRef);
       if (!snap.exists()) {
-        const def = WHEEL_TYPES.simple.defaultConfig();
-        await set(cfgRef, { type: 'simple', title: 'Vòng quay thử nghiệm', createdTs: Date.now(), ...def });
+        await set(cfgRef, { type: SEED, title: SEED_TITLES[SEED] || SEED, createdTs: Date.now(), ...WHEEL_TYPES[SEED].defaultConfig() });
       }
     } catch (e) { console.warn('seed write skipped:', e.message); }
   }
@@ -150,9 +151,16 @@ async function startApp() {
   });
 }
 
+let sessionClaim = null;
 function myClaim() {
-  // identity 'none' -> always null; device/group modes added in sub-project 2.
-  return null;
+  if (!T || T.identity === 'none') return null;
+  let key = null;
+  if (T.identity === 'device') key = uid;
+  else if (T.identity === 'group') {
+    try { key = localStorage.getItem('wheelClaim:' + WID); } catch (e) {}
+    if (!key) key = sessionClaim;
+  }
+  return key && T.mineFrom ? T.mineFrom(config, state, key) : null;
 }
 
 function buildUI() {
@@ -179,6 +187,16 @@ function wire() {
   const btn = document.getElementById('spinBtn');
   if (!btn) return;
   btn.addEventListener('click', doSpin);
+  const sel = document.getElementById('groupSel');
+  if (sel) {
+    const refreshBtn = () => {
+      const mine = myClaim();
+      const ui = T.readSelection(app);
+      btn.disabled = !T.canSpin(config, state, ui, mine);
+    };
+    sel.addEventListener('change', refreshBtn);
+    refreshBtn();
+  }
 }
 
 async function doSpin() {
@@ -189,16 +207,18 @@ async function doSpin() {
   const mine = myClaim();
   const ui = T.readSelection(app);
   if (!T.canSpin(config, state, ui, mine)) return;
+  if (T.confirmSpin && !T.confirmSpin(config, state, ui)) return;
 
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
   spinning = true; btn.disabled = true; btn.textContent = 'Đang quay...'; hint.textContent = '';
   lastReason = null;
 
+  const identityKey = T.identity === 'device' ? uid : (T.identity === 'group' ? (ui && ui.groupKey) : null);
   let target = null, liveState = state, pendingTarget = null;
   try {
     const res = await runTransaction(ref(db, `wheels/${WID}/state`), cur => {
       cur = cur || {};
-      const r = T.assign(cur, { ui, mine, config });
+      const r = T.assign(cur, { ui, mine, config, identityKey });
       if (r.reason) { lastReason = r.reason; return; }   // abort, no commit
       pendingTarget = r.targetIndex;                      // local only — never written to persisted state
       return cur;
@@ -207,7 +227,7 @@ async function doSpin() {
       liveState = res.snapshot.val() || state;
       target = pendingTarget;
       const ck = T.claimKey(config, liveState, ui);
-      if (ck) { try { localStorage.setItem('wheelClaim:' + WID, ck); } catch (e) {} }
+      if (ck) { sessionClaim = ck; try { localStorage.setItem('wheelClaim:' + WID, ck); } catch (e) {} }
     }
   } catch (e) { lastReason = 'error'; console.error(e); }
 
@@ -236,6 +256,7 @@ function hintFor(reason) {
   if (reason === 'full') return '🎉 Hết lựa chọn!';
   if (reason === 'taken') return '⚠️ Mục này đã được chọn rồi.';
   if (reason === 'dup') return '⚠️ Tên này đã có rồi.';
+  if (reason === 'spun') return '⚠️ Bạn đã quay rồi.';
   if (reason === 'error') return '⚠️ Lỗi mạng, thử lại nhé.';
   return '';
 }
