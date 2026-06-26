@@ -93,7 +93,7 @@ export const WHEEL_TYPES = {
     },
     participantControls() { return ''; },
     readSelection() { return {}; },
-    canSpin(config, state) { return this.availableIndices(config, state).length > 0; },
+    canSpin(config, state, _ui, _mine) { return this.availableIndices(config, state).length > 0; },
 
     assign(cur, { config }) {
       cur.picked = Array.isArray(cur.picked) ? cur.picked : [];
