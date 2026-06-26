@@ -1,0 +1,4 @@
+node_modules/
+.firebase/
+.playwright-mcp/
+.superpowers/

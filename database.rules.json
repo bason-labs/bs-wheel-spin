@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "wheel": {
+      "$room": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}
