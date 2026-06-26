@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vòng quay</title>
+<style>
+  :root{ --gold:#fbbf24; --ink:#0b1020; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;color:#f8fafc;min-height:100vh;overflow-x:hidden;
+    background:
+      radial-gradient(900px 500px at 12% -5%, rgba(16,185,129,.20), transparent 60%),
+      radial-gradient(900px 500px at 88% -5%, rgba(139,92,246,.20), transparent 60%),
+      linear-gradient(160deg,#0b1020 0%,#11162e 55%,#0b1020 100%);
+    display:flex;flex-direction:column;align-items:center;padding:26px 16px 60px;}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:#cbd5e1;background:var(--card);border:1px solid var(--line);padding:6px 14px;border-radius:999px;margin-bottom:14px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:#94a3b8;}
+  .dot.on{background:#22c55e;box-shadow:0 0 10px #22c55e;animation:blink 1.8s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-size:clamp(26px,6vw,40px);font-weight:800;letter-spacing:-1px;text-align:center;line-height:1.05;}
+  h1 .g{background:linear-gradient(90deg,#10b981,#fbbf24,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{opacity:.7;font-size:14px;margin:8px 0 4px;text-align:center;max-width:460px;line-height:1.5;}
+  .progress-top{display:flex;align-items:center;gap:10px;margin:16px 0 22px;font-size:13px;color:#cbd5e1;}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;color:#fff;}
+  .stage{width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;}
+  .field{position:relative;width:100%;margin-bottom:22px;}
+  .field input{width:100%;padding:16px 18px;border-radius:16px;border:1px solid var(--line);font-size:16px;outline:none;background:rgba(255,255,255,.95);color:var(--ink);font-weight:600;transition:box-shadow .2s;}
+  .field input:focus{box-shadow:0 0 0 4px rgba(251,191,36,.35);}
+  .field label{position:absolute;top:-9px;left:14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);background:#0e1326;padding:1px 8px;border-radius:6px;}
+  .wheel-wrap{position:relative;width:min(320px,82vw);aspect-ratio:1;margin-bottom:6px;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5));}
+  .pointer{position:absolute;top:-4px;left:50%;transform:translateX(-50%);z-index:6;width:34px;height:42px;background:linear-gradient(180deg,#fde68a,var(--gold));clip-path:polygon(50% 100%,0 0,100% 0);box-shadow:0 4px 10px rgba(0,0,0,.45);}
+  .ring{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.85) 0deg 2deg, transparent 2deg 22.5deg);padding:9px;box-shadow:0 0 0 8px rgba(255,255,255,.95), inset 0 0 0 2px rgba(0,0,0,.2);}
+  .disc{width:100%;height:100%;border-radius:50%;position:relative;transition:transform 4.6s cubic-bezier(.16,.84,.27,1);}
+  .disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 50%, transparent 36%, rgba(0,0,0,.2) 100%);}
+  .label{position:absolute;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);z-index:2;transform:translate(-50%,-50%);white-space:nowrap;text-align:center;}
+  .gloss{position:absolute;inset:9px;border-radius:50%;pointer-events:none;z-index:3;background:radial-gradient(120% 80% at 30% 18%, rgba(255,255,255,.38), rgba(255,255,255,0) 45%);}
+  .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#e2e8f0);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,.5), inset 0 0 0 4px rgba(0,0,0,.06);}
+  .spin-btn{margin-top:18px;padding:17px 46px;font-size:19px;font-weight:800;letter-spacing:.3px;border:none;border-radius:18px;cursor:pointer;color:var(--ink);background:linear-gradient(95deg,var(--gold),#fb923c);box-shadow:0 10px 30px rgba(251,191,36,.4);transition:transform .12s,opacity .2s;}
+  .spin-btn:hover{transform:translateY(-2px);}
+  .spin-btn:active{transform:scale(.96);}
+  .spin-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none;}
+  .hint{min-height:18px;font-size:13px;margin-top:10px;color:var(--gold);text-align:center;}
+  .result-card{width:100%;border-radius:22px;padding:26px 22px;text-align:center;border:1px solid var(--line);background:var(--card);backdrop-filter:blur(8px);animation:rise .5s cubic-bezier(.2,.8,.2,1);}
+  @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+  .result-card .crown{font-size:40px;}
+  .result-card .who{font-size:15px;opacity:.75;margin-top:2px;}
+  .result-card .grp{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:12px 22px;border-radius:16px;font-size:24px;font-weight:800;color:#fff;}
+  .result-card .note{font-size:12px;opacity:.55;margin-top:14px;}
+  .groups{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:540px;margin-top:26px;}
+  .group{background:var(--card);border:1px solid var(--gc,var(--line));border-radius:20px;padding:14px;backdrop-filter:blur(8px);}
+  .ghead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .gname{font-size:17px;font-weight:800;display:flex;align-items:center;gap:7px;}
+  .gtag{width:11px;height:11px;border-radius:50%;background:var(--gc);}
+  .gcount{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;color:#fff;background:var(--gcd);}
+  .bar{height:7px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden;margin:8px 0 12px;}
+  .bar > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gc),var(--gcd));transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .members{list-style:none;display:flex;flex-direction:column;gap:7px;min-height:18px;}
+  .member{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;animation:pop .35s ease;}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+  .avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--gc),var(--gcd));}
+  .member.me{background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:5px 8px;margin:-5px -8px;}
+  .member .you{font-size:11px;font-weight:800;color:var(--gold);}
+  .empty{font-size:13px;opacity:.4;font-style:italic;}
+  .status{font-size:12px;opacity:.5;margin-top:22px;text-align:center;}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden;}
+  .conf{position:absolute;will-change:transform;}
+  .setup{max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:30px;line-height:1.6;font-size:14px;}
+  .setup h3{margin-bottom:8px;color:var(--gold);} .setup code{background:rgba(255,255,255,.1);padding:2px 6px;border-radius:5px;}
+  .loading{opacity:.6;font-size:14px;margin-top:40px;}
+
+/* --- additions for the generic engine --- */
+.label.dim{opacity:.35;}
+.selectwrap{position:relative;width:100%;margin-bottom:22px;}
+.selectwrap label{position:absolute;top:-9px;left:14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);background:#0e1326;padding:1px 8px;border-radius:6px;z-index:1;}
+.selectwrap select{width:100%;padding:16px 18px;border-radius:16px;border:1px solid var(--line);font-size:16px;background:rgba(255,255,255,.95);color:var(--ink);font-weight:600;appearance:none;}
+.notfound{max-width:480px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;margin-top:40px;text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+  <div id="confetti"></div>
+  <div class="badge"><span class="dot" id="conn"></span> <span id="connText">Đang kết nối...</span></div>
+  <h1 id="title">Vòng Quay</h1>
+  <p class="sub" id="sub"></p>
+  <div id="app"><div class="loading">⏳ Đang tải...</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { WHEEL_TYPES, discHtml, esc, deviceId, burst, chime, landingRotation } from "./wheel-types.js";
+
+const firebaseConfig = {
+  apiKey:      "AIzaSyCiRDS3QlL00uAfp45V6ZmA3IcZXK2EjCo",
+  authDomain:  "wheel-spin-a6f34.firebaseapp.com",
+  databaseURL: "https://wheel-spin-a6f34-default-rtdb.firebaseio.com",
+  projectId:   "wheel-spin-a6f34",
+  appId:       "1:622383530807:web:c64191d81c6c7cc1a190b2"
+};
+
+const app = document.getElementById('app');
+const connDot = document.getElementById('conn');
+const connText = document.getElementById('connText');
+const titleEl = document.getElementById('title');
+const subEl = document.getElementById('sub');
+const confettiEl = document.getElementById('confetti');
+
+const params = new URLSearchParams(location.search);
+const WID = params.get('w');
+const SEED = params.get('seed');
+
+let db = null, uid = null, T = null, config = null, state = {},
+    rotation = 0, spinning = false, audioCtx = null, lastReason = null;
+
+if (!WID) {
+  showMessage('⚠️ Không tìm thấy vòng quay', 'Thiếu mã vòng quay trong đường dẫn (?w=...).');
+} else if (firebaseConfig.apiKey === 'PASTE_API_KEY') {
+  showMessage('⚙️ Chưa cấu hình Firebase', 'Dán cấu hình Firebase vào file này.');
+} else {
+  startApp();
+}
+
+function showMessage(h, body) {
+  app.innerHTML = `<div class="notfound"><h2>${esc(h)}</h2><p>${esc(body)}</p></div>`;
+}
+
+async function startApp() {
+  const fb = initializeApp(firebaseConfig);
+  db = getDatabase(fb);
+  uid = deviceId();
+  connDot.classList.add('on'); connText.textContent = 'Đã kết nối · trực tiếp';
+
+  if (SEED === 'simple') {
+    try {
+      const cfgRef = ref(db, `wheels/${WID}/config`);
+      const snap = await get(cfgRef);
+      if (!snap.exists()) {
+        const def = WHEEL_TYPES.simple.defaultConfig();
+        await set(cfgRef, { type: 'simple', title: 'Vòng quay thử nghiệm', createdTs: Date.now(), ...def });
+      }
+    } catch (e) { console.warn('seed write skipped:', e.message); }
+  }
+
+  onValue(ref(db, `wheels/${WID}`), snap => {
+    const v = snap.val() || {};
+    config = v.config || null;
+    state = v.state || {};
+    if (!config) { showMessage('Vòng quay chưa được thiết lập', 'Quản trị viên chưa tạo cấu hình cho vòng quay này.'); return; }
+    T = WHEEL_TYPES[config.type];
+    if (!T) { showMessage('Loại vòng quay không hỗ trợ', `type = ${config.type}`); return; }
+    if (!spinning) buildUI();
+  });
+}
+
+function myClaim() {
+  // identity 'none' -> always null; device/group modes added in sub-project 2.
+  return null;
+}
+
+function buildUI() {
+  titleEl.textContent = config.title || 'Vòng Quay';
+  const mine = myClaim();
+  const segs = T.segments(config, state);
+  const canSpin = T.canSpin(config, state, {}, mine);
+  app.innerHTML = `
+    <div class="stage">
+      ${T.participantControls(config, state, mine)}
+      <div class="wheel-wrap"><div class="pointer"></div>
+        <div class="ring">${discHtml(segs, rotation)}<div class="gloss"></div></div>
+        <div class="hub">🎯</div></div>
+      <button class="spin-btn" id="spinBtn" ${canSpin ? '' : 'disabled'}>QUAY 🎲</button>
+      <div class="hint" id="hint"></div>
+      ${T.resultView(config, state, mine)}
+    </div>
+    ${T.panel(config, state, mine)}
+    <div class="status">🔄 Đồng bộ trực tiếp giữa mọi thiết bị</div>`;
+  wire();
+}
+
+function wire() {
+  const btn = document.getElementById('spinBtn');
+  if (!btn) return;
+  btn.addEventListener('click', doSpin);
+}
+
+async function doSpin() {
+  if (spinning || !T) return;
+  const btn = document.getElementById('spinBtn');
+  const hint = document.getElementById('hint');
+  const disc = document.getElementById('disc');
+  const mine = myClaim();
+  const ui = T.readSelection(app);
+  if (!T.canSpin(config, state, ui, mine)) return;
+
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  spinning = true; btn.disabled = true; btn.textContent = 'Đang quay...'; hint.textContent = '';
+  lastReason = null;
+
+  let target = null;
+  try {
+    const res = await runTransaction(ref(db, `wheels/${WID}/state`), cur => {
+      cur = cur || {};
+      const r = T.assign(cur, { ui, mine, config });
+      if (r.reason) { lastReason = r.reason; return; }   // abort
+      cur.__lastTarget = r.targetIndex;                   // carry target out of the txn
+      return cur;
+    });
+    if (res.committed) {
+      const v = res.snapshot.val();
+      target = v.__lastTarget;
+      const ck = T.claimKey(config, v, ui);
+      if (ck) { try { localStorage.setItem('wheelClaim:' + WID, ck); } catch (e) {} }
+    }
+  } catch (e) { lastReason = 'error'; console.error(e); }
+
+  if (target == null) {
+    spinning = false;
+    btn.disabled = false; btn.textContent = 'QUAY 🎲';
+    hint.textContent = hintFor(lastReason);
+    buildUI();
+    return;
+  }
+
+  const segCount = T.segments(config, state).length;
+  rotation = landingRotation(rotation, target, segCount);
+  disc.style.transform = `rotate(${rotation}deg)`;
+  const seg = T.segments(config, state)[target];
+
+  setTimeout(() => {
+    spinning = false;
+    chime(audioCtx);
+    burst({ color: seg.color, dark: seg.dark }, confettiEl);
+    buildUI();
+  }, 4700);
+}
+
+function hintFor(reason) {
+  if (reason === 'full') return '🎉 Hết lựa chọn!';
+  if (reason === 'taken') return '⚠️ Mục này đã được chọn rồi.';
+  if (reason === 'dup') return '⚠️ Tên này đã có rồi.';
+  if (reason === 'error') return '⚠️ Lỗi mạng, thử lại nhé.';
+  return '';
+}
+</script>
+</body>
+</html>
