@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vòng quay chia nhóm</title>
+<style>
+  :root{ --gold:#fbbf24; --ink:#0b1020; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;color:#f8fafc;min-height:100vh;overflow-x:hidden;
+    background:
+      radial-gradient(900px 500px at 12% -5%, rgba(16,185,129,.20), transparent 60%),
+      radial-gradient(900px 500px at 88% -5%, rgba(139,92,246,.20), transparent 60%),
+      linear-gradient(160deg,#0b1020 0%,#11162e 55%,#0b1020 100%);
+    display:flex;flex-direction:column;align-items:center;padding:26px 16px 60px;}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:#cbd5e1;background:var(--card);border:1px solid var(--line);padding:6px 14px;border-radius:999px;margin-bottom:14px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:#94a3b8;}
+  .dot.on{background:#22c55e;box-shadow:0 0 10px #22c55e;animation:blink 1.8s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-size:clamp(26px,6vw,40px);font-weight:800;letter-spacing:-1px;text-align:center;line-height:1.05;}
+  h1 .g{background:linear-gradient(90deg,#10b981,#fbbf24,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{opacity:.7;font-size:14px;margin:8px 0 4px;text-align:center;max-width:460px;line-height:1.5;}
+  .progress-top{display:flex;align-items:center;gap:10px;margin:16px 0 22px;font-size:13px;color:#cbd5e1;}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;color:#fff;}
+  .stage{width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;}
+  .field{position:relative;width:100%;margin-bottom:22px;}
+  .field input{width:100%;padding:16px 18px;border-radius:16px;border:1px solid var(--line);font-size:16px;outline:none;background:rgba(255,255,255,.95);color:var(--ink);font-weight:600;transition:box-shadow .2s;}
+  .field input:focus{box-shadow:0 0 0 4px rgba(251,191,36,.35);}
+  .field label{position:absolute;top:-9px;left:14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);background:#0e1326;padding:1px 8px;border-radius:6px;}
+  .wheel-wrap{position:relative;width:min(320px,82vw);aspect-ratio:1;margin-bottom:6px;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5));}
+  .pointer{position:absolute;top:-4px;left:50%;transform:translateX(-50%);z-index:6;width:34px;height:42px;background:linear-gradient(180deg,#fde68a,var(--gold));clip-path:polygon(50% 100%,0 0,100% 0);box-shadow:0 4px 10px rgba(0,0,0,.45);}
+  .ring{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.85) 0deg 2deg, transparent 2deg 22.5deg);padding:9px;box-shadow:0 0 0 8px rgba(255,255,255,.95), inset 0 0 0 2px rgba(0,0,0,.2);}
+  .disc{width:100%;height:100%;border-radius:50%;position:relative;transition:transform 4.6s cubic-bezier(.16,.84,.27,1);}
+  .disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 50%, transparent 36%, rgba(0,0,0,.2) 100%);}
+  .label{position:absolute;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);z-index:2;transform:translate(-50%,-50%);white-space:nowrap;text-align:center;}
+  .gloss{position:absolute;inset:9px;border-radius:50%;pointer-events:none;z-index:3;background:radial-gradient(120% 80% at 30% 18%, rgba(255,255,255,.38), rgba(255,255,255,0) 45%);}
+  .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#e2e8f0);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,.5), inset 0 0 0 4px rgba(0,0,0,.06);}
+  .spin-btn{margin-top:18px;padding:17px 46px;font-size:19px;font-weight:800;letter-spacing:.3px;border:none;border-radius:18px;cursor:pointer;color:var(--ink);background:linear-gradient(95deg,var(--gold),#fb923c);box-shadow:0 10px 30px rgba(251,191,36,.4);transition:transform .12s,opacity .2s;}
+  .spin-btn:hover{transform:translateY(-2px);}
+  .spin-btn:active{transform:scale(.96);}
+  .spin-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none;}
+  .hint{min-height:18px;font-size:13px;margin-top:10px;color:var(--gold);text-align:center;}
+  .result-card{width:100%;border-radius:22px;padding:26px 22px;text-align:center;border:1px solid var(--line);background:var(--card);backdrop-filter:blur(8px);animation:rise .5s cubic-bezier(.2,.8,.2,1);}
+  @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+  .result-card .crown{font-size:40px;}
+  .result-card .who{font-size:15px;opacity:.75;margin-top:2px;}
+  .result-card .grp{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:12px 22px;border-radius:16px;font-size:24px;font-weight:800;color:#fff;}
+  .result-card .note{font-size:12px;opacity:.55;margin-top:14px;}
+  .groups{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:540px;margin-top:26px;}
+  .group{background:var(--card);border:1px solid var(--gc,var(--line));border-radius:20px;padding:14px;backdrop-filter:blur(8px);}
+  .ghead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .gname{font-size:17px;font-weight:800;display:flex;align-items:center;gap:7px;}
+  .gtag{width:11px;height:11px;border-radius:50%;background:var(--gc);}
+  .gcount{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;color:#fff;background:var(--gcd);}
+  .bar{height:7px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden;margin:8px 0 12px;}
+  .bar > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gc),var(--gcd));transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .members{list-style:none;display:flex;flex-direction:column;gap:7px;min-height:18px;}
+  .member{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;animation:pop .35s ease;}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+  .avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--gc),var(--gcd));}
+  .member.me{background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:5px 8px;margin:-5px -8px;}
+  .member .you{font-size:11px;font-weight:800;color:var(--gold);}
+  .empty{font-size:13px;opacity:.4;font-style:italic;}
+  .status{font-size:12px;opacity:.5;margin-top:22px;text-align:center;}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden;}
+  .conf{position:absolute;will-change:transform;}
+  .setup{max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:30px;line-height:1.6;font-size:14px;}
+  .setup h3{margin-bottom:8px;color:var(--gold);} .setup code{background:rgba(255,255,255,.1);padding:2px 6px;border-radius:5px;}
+  .loading{opacity:.6;font-size:14px;margin-top:40px;}
+</style>
+</head>
+<body>
+  <div id="confetti"></div>
+  <div class="badge"><span class="dot" id="conn"></span> <span id="connText">Đang kết nối...</span></div>
+  <h1>Vòng Quay <span class="g">Chia Nhóm</span></h1>
+  <p class="sub">Nhập tên và quay một lần. Bạn sẽ vào Group 3 hoặc Group 4 — tối đa 6 người mỗi nhóm.</p>
+  <div id="app"><div class="loading">⏳ Đang tải...</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ============================================================
+   1) FIREBASE CONFIG (filled in for project wheel-spin-a6f34)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey:            "AIzaSyCiRDS3QlL00uAfp45V6ZmA3IcZXK2EjCo",
+  authDomain:        "wheel-spin-a6f34.firebaseapp.com",
+  databaseURL:       "https://wheel-spin-a6f34-default-rtdb.firebaseio.com",
+  projectId:         "wheel-spin-a6f34",
+  appId:             "1:622383530807:web:c64191d81c6c7cc1a190b2"
+};
+
+/* ============================================================
+   2) GROUP CONFIG — edit names / colors / size here
+   ============================================================ */
+const GROUPS = [
+  { key:'g3', name:'Group 3', color:'#10b981', dark:'#059669' },
+  { key:'g4', name:'Group 4', color:'#8b5cf6', dark:'#7c3aed' },
+];
+const MAX = 6;
+const ROOM = 'room1';   // change this string to start a fresh empty room
+/* ============================================================ */
+
+const SEG = 360 / GROUPS.length;
+const TOTAL_CAP = GROUPS.length * MAX;
+const gById = k => GROUPS.find(g=>g.key===k);
+
+const app = document.getElementById('app');
+const connDot = document.getElementById('conn');
+const connText = document.getElementById('connText');
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const initial = s => (s.trim()[0] || '?').toUpperCase();
+const stripVN = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d').toLowerCase().trim().replace(/\s+/g,' ');
+
+let db=null, uid=null, state={members:{}}, mine=null, spinning=false, rotation=0, audioCtx=null;
+GROUPS.forEach(g=>state.members[g.key]=[]);
+
+/* ---------- guard: not configured yet ---------- */
+if(firebaseConfig.apiKey === "PASTE_API_KEY"){
+  app.innerHTML = `<div class="setup">
+    <h3>⚙️ Chưa cấu hình Firebase</h3>
+    Mở file này, dán cấu hình Firebase của bạn vào phần <code>firebaseConfig</code> ở đầu thẻ &lt;script&gt;,
+    rồi tải lại trang. Xem hướng dẫn 5 bước trong tin nhắn.
+  </div>`;
+} else {
+  startApp();
+}
+
+/* device identity — stable per browser/device, no login needed */
+function deviceId(){
+  try{
+    let id = localStorage.getItem('wheelDeviceId');
+    if(!id){
+      id = (crypto.randomUUID ? crypto.randomUUID()
+            : 'd-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10));
+      localStorage.setItem('wheelDeviceId', id);
+    }
+    return id;
+  }catch(e){
+    // localStorage blocked (e.g. private mode) — fall back to a per-session id
+    return 'd-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10);
+  }
+}
+
+function startApp(){
+  const fb = initializeApp(firebaseConfig);
+  db = getDatabase(fb);
+  uid = deviceId();
+  connDot.classList.add('on'); connText.textContent = 'Đã kết nối · trực tiếp';
+  listen();
+}
+
+function listen(){
+  onValue(ref(db, `wheel/${ROOM}`), snap=>{
+    const v = snap.val() || {};
+    const m = v.members || {};
+    GROUPS.forEach(g=> state.members[g.key] = Array.isArray(m[g.key]) ? m[g.key] : []);
+    const spins = v.spins || {};
+    mine = (uid && spins[uid]) ? spins[uid] : null;
+    if(!spinning) buildUI();
+  });
+}
+
+/* ---------- helpers ---------- */
+const allMembers = () => GROUPS.flatMap(g=>state.members[g.key]);
+const spunAlready = () => !!mine;
+function findDuplicate(name){
+  const a=stripVN(name); if(!a) return null; const at=a.split(' ');
+  for(const ex of allMembers()){
+    const b=stripVN(ex), bt=b.split(' ');
+    if(a===b) return ex;
+    if(at.every(t=>bt.includes(t))||bt.every(t=>at.includes(t))) return ex;
+    if(at[at.length-1]===bt[bt.length-1]) return ex;
+  }
+  return null;
+}
+
+/* ---------- render ---------- */
+function buildUI(){
+  app.innerHTML = `
+    <div class="progress-top"><span>Đã chọn:</span><span class="pill">${allMembers().length}/${TOTAL_CAP}</span></div>
+    <div class="stage">${ spunAlready() ? lockedView() : spinView() }</div>
+    ${groupsView()}
+    <div class="status">🔄 Đồng bộ trực tiếp giữa mọi thiết bị</div>`;
+  wire();
+}
+function wheelLabels(){
+  return GROUPS.map((g,i)=>{
+    const a=(i*SEG+SEG/2)*Math.PI/180, r=31;
+    return `<span class="label" style="left:${50+r*Math.sin(a)}%;top:${50-r*Math.cos(a)}%">${esc(g.name)}</span>`;
+  }).join('');
+}
+function spinView(){
+  const stops = GROUPS.map((g,i)=>`${g.color} ${i*SEG}deg ${(i+1)*SEG}deg`).join(',');
+  return `
+    <div class="field"><label>Tên của bạn</label>
+      <input id="nameInput" type="text" placeholder="Ví dụ: Minh, Lan..." maxlength="24" autocomplete="off"></div>
+    <div class="wheel-wrap"><div class="pointer"></div>
+      <div class="ring"><div class="disc" id="disc" style="background:conic-gradient(${stops});transform:rotate(${rotation}deg)">${wheelLabels()}</div><div class="gloss"></div></div>
+      <div class="hub">🎯</div></div>
+    <button class="spin-btn" id="spinBtn" disabled>QUAY 🎲</button>
+    <div class="hint" id="hint"></div>`;
+}
+function lockedView(){
+  const g=gById(mine.group);
+  return `<div class="result-card"><div class="crown">🎉</div>
+    <div class="who"><b>${esc(mine.name)}</b>, bạn đã được xếp vào</div>
+    <div class="grp" style="background:linear-gradient(135deg,${g.color},${g.dark})">${esc(g.name)}</div>
+    <div class="note">Mỗi người chỉ quay 1 lần · Kết quả đã được lưu</div></div>`;
+}
+function memberList(g){
+  const arr=state.members[g.key];
+  if(!arr.length) return `<li class="empty">Chưa có ai...</li>`;
+  return arr.map(n=>{
+    const isMe = mine && mine.group===g.key && mine.name===n;
+    return `<li class="member ${isMe?'me':''}"><span class="avatar">${esc(initial(n))}</span><span>${esc(n)}</span>${isMe?'<span class="you">(bạn)</span>':''}</li>`;
+  }).join('');
+}
+function groupsView(){
+  return `<div class="groups">${GROUPS.map(g=>{
+    const arr=state.members[g.key], pct=Math.round(arr.length/MAX*100);
+    return `<div class="group" style="--gc:${g.color};--gcd:${g.dark};border-color:${g.color}66">
+      <div class="ghead"><span class="gname"><span class="gtag"></span>${esc(g.name)}</span><span class="gcount">${arr.length}/${MAX}</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <ul class="members">${memberList(g)}</ul></div>`;
+  }).join('')}</div>`;
+}
+
+/* ---------- interaction ---------- */
+function wire(){
+  const btn=document.getElementById('spinBtn'), input=document.getElementById('nameInput');
+  if(!btn) return;
+  const sync=()=>{ btn.disabled=!input.value.trim(); };
+  input.addEventListener('input',sync);
+  input.addEventListener('keydown',e=>{ if(e.key==='Enter'&&input.value.trim()) doSpin(); });
+  btn.addEventListener('click',doSpin);
+  sync(); input.focus();
+}
+
+async function doSpin(){
+  if(spinning||spunAlready()||!uid) return;
+  const input=document.getElementById('nameInput'), btn=document.getElementById('spinBtn'),
+        hint=document.getElementById('hint'), disc=document.getElementById('disc');
+  const name=input.value.trim(); if(!name) return;
+  try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+
+  if(GROUPS.every(g=>state.members[g.key].length>=MAX)){ hint.textContent='🎉 Tất cả các nhóm đã đầy!'; return; }
+  const dup=findDuplicate(name);
+  if(dup){
+    const ok=confirm(`Tên "${name}" có vẻ trùng với "${dup}" đã có.\n\nĐây có phải NGƯỜI KHÁC không?\n\n• OK = người khác → vẫn quay\n• Cancel = cùng người → dừng lại`);
+    if(!ok){ hint.textContent=`⚠️ "${dup}" đã có rồi — mỗi người chỉ chọn 1 lần.`; return; }
+  }
+
+  spinning=true; btn.disabled=true; btn.textContent='Đang quay...'; input.disabled=true; hint.textContent='';
+
+  // atomic, server-authoritative assignment
+  let assignedKey=null, reason=null;
+  try{
+    const res = await runTransaction(ref(db, `wheel/${ROOM}`), cur=>{
+      cur = cur || {}; cur.members = cur.members || {}; cur.spins = cur.spins || {};
+      GROUPS.forEach(g=>{ if(!Array.isArray(cur.members[g.key])) cur.members[g.key]=[]; });
+      if(cur.spins[uid]) { reason='spun'; return; }                       // already spun -> abort
+      const open = GROUPS.filter(g=>cur.members[g.key].length<MAX);
+      if(!open.length){ reason='full'; return; }                          // all full -> abort
+      const pick = open[Math.floor(Math.random()*open.length)];
+      cur.members[pick.key].push(name);
+      cur.spins[uid] = { group:pick.key, name, ts:Date.now() };
+      return cur;
+    });
+    if(res.committed){
+      const v=res.snapshot.val(); assignedKey = v.spins[uid].group;
+    }
+  }catch(e){ reason='error'; console.error(e); }
+
+  if(!assignedKey){
+    spinning=false;
+    if(reason==='full'){ hint.textContent='🎉 Tất cả các nhóm đã đầy!'; }
+    else if(reason==='error'){ hint.textContent='⚠️ Lỗi mạng, thử lại nhé.'; btn.disabled=false; input.disabled=false; btn.textContent='QUAY 🎲'; }
+    buildUI();
+    return;
+  }
+
+  const idx = GROUPS.findIndex(g=>g.key===assignedKey);
+  const base = (360 - (idx*SEG + SEG/2)) % 360;
+  const jitter = (Math.random()*2-1)*(SEG/2 - 8);
+  rotation += (6*360 + base + jitter) - (rotation%360);
+  disc.style.transform = `rotate(${rotation}deg)`;
+
+  setTimeout(()=>{ spinning=false; chime(); burst(gById(assignedKey)); buildUI(); }, 4700);
+}
+
+/* ---------- celebration ---------- */
+function chime(){
+  if(!audioCtx) return;
+  try{ [660,880,1175].forEach((f,i)=>{
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
+    const t=audioCtx.currentTime+i*0.09;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.18,t+0.02); g.gain.exponentialRampToValueAtTime(.001,t+0.35);
+    o.start(t); o.stop(t+0.36);
+  }); }catch(e){}
+}
+function burst(g){
+  const wrap=document.getElementById('confetti');
+  const colors=[g.color,g.dark,'#fbbf24','#ffffff'];
+  for(let i=0;i<100;i++){
+    const c=document.createElement('div'); c.className='conf';
+    const size=6+Math.random()*8;
+    c.style.left=(Math.random()*100)+'vw'; c.style.top='-20px';
+    c.style.width=size+'px'; c.style.height=(size*1.4)+'px';
+    c.style.background=colors[i%colors.length];
+    c.style.borderRadius=Math.random()<.5?'50%':'2px';
+    const dx=(Math.random()*2-1)*30, dur=2200+Math.random()*1500, rot=Math.random()*720;
+    wrap.appendChild(c);
+    c.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${dx}vw,108vh) rotate(${rot}deg)`,opacity:.9}],{duration:dur,easing:'cubic-bezier(.2,.6,.4,1)',fill:'forwards'});
+    setTimeout(()=>c.remove(),dur+100);
+  }
+}
+</script>
+</body>
+</html>
