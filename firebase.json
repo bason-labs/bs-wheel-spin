@@ -8,6 +8,10 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      { "source": "/groups", "destination": "/groups.html" },
+      { "source": "/", "destination": "/wheel.html" }
     ]
   }
 }
