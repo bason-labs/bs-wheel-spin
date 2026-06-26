@@ -38,12 +38,17 @@ export function landingRotation(curRotation, idx, segCount, rng = Math.random) {
 export function discHtml(segs, rotation) {
   const n = segs.length;
   const SEG = 360 / n;
+  // Dimmed (taken) segments use an OPAQUE muted slate — not a translucent color,
+  // which would otherwise let the dark page show through as a "hole"/line in the wheel.
+  const DIM = '#3b4252';
+  // Scale label text down as the wheel gets denser, so labels don't overlap.
+  const fontSize = n > 10 ? 12 : n > 6 ? 14 : 18;
   const stops = segs
-    .map((s, i) => `${s.dim ? s.color + '33' : s.color} ${i * SEG}deg ${(i + 1) * SEG}deg`)
+    .map((s, i) => `${s.dim ? DIM : s.color} ${i * SEG}deg ${(i + 1) * SEG}deg`)
     .join(',');
   const labels = segs.map((s, i) => {
     const a = (i * SEG + SEG / 2) * Math.PI / 180, r = 31;
-    return `<span class="label${s.dim ? ' dim' : ''}" style="left:${50 + r * Math.sin(a)}%;top:${50 - r * Math.cos(a)}%">${esc(s.label)}</span>`;
+    return `<span class="label${s.dim ? ' dim' : ''}" style="left:${50 + r * Math.sin(a)}%;top:${50 - r * Math.cos(a)}%;font-size:${fontSize}px">${esc(s.label)}</span>`;
   }).join('');
   return `<div class="disc" id="disc" style="background:conic-gradient(${stops});transform:rotate(${rotation}deg)">${labels}</div>`;
 }
@@ -141,7 +146,7 @@ WHEEL_TYPES.topicgroup = {
 
   defaultConfig() {
     return {
-      topics: Array.from({ length: 13 }, (_, i) => `Chủ đề ${i + 1}`),
+      topics: Array.from({ length: 13 }, (_, i) => `CĐ ${i + 1}`),
       groups: Array.from({ length: 8 }, (_, i) => ({
         key: `g${i + 1}`, name: `Group ${i + 1}`,
         color: PALETTE[i % PALETTE.length].color, dark: PALETTE[i % PALETTE.length].dark,
