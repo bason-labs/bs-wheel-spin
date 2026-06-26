@@ -128,7 +128,7 @@ async function startApp() {
   uid = deviceId();
   connDot.classList.add('on'); connText.textContent = 'Đã kết nối · trực tiếp';
 
-  if (SEED === 'simple') {
+  if (SEED === 'simple') {   // TEMP dev seed — remove in sub-project 3 (admin page supersedes this)
     try {
       const cfgRef = ref(db, `wheels/${WID}/config`);
       const snap = await get(cfgRef);
@@ -194,19 +194,19 @@ async function doSpin() {
   spinning = true; btn.disabled = true; btn.textContent = 'Đang quay...'; hint.textContent = '';
   lastReason = null;
 
-  let target = null;
+  let target = null, liveState = state, pendingTarget = null;
   try {
     const res = await runTransaction(ref(db, `wheels/${WID}/state`), cur => {
       cur = cur || {};
       const r = T.assign(cur, { ui, mine, config });
-      if (r.reason) { lastReason = r.reason; return; }   // abort
-      cur.__lastTarget = r.targetIndex;                   // carry target out of the txn
+      if (r.reason) { lastReason = r.reason; return; }   // abort, no commit
+      pendingTarget = r.targetIndex;                      // local only — never written to persisted state
       return cur;
     });
     if (res.committed) {
-      const v = res.snapshot.val();
-      target = v.__lastTarget;
-      const ck = T.claimKey(config, v, ui);
+      liveState = res.snapshot.val() || state;
+      target = pendingTarget;
+      const ck = T.claimKey(config, liveState, ui);
       if (ck) { try { localStorage.setItem('wheelClaim:' + WID, ck); } catch (e) {} }
     }
   } catch (e) { lastReason = 'error'; console.error(e); }
@@ -219,10 +219,10 @@ async function doSpin() {
     return;
   }
 
-  const segCount = T.segments(config, state).length;
+  const segCount = T.segments(config, liveState).length;
   rotation = landingRotation(rotation, target, segCount);
   disc.style.transform = `rotate(${rotation}deg)`;
-  const seg = T.segments(config, state)[target];
+  const seg = T.segments(config, liveState)[target];
 
   setTimeout(() => {
     spinning = false;
