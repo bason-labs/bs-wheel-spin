@@ -271,3 +271,18 @@ export function burst(colorPair, confettiEl) {
     setTimeout(() => c.remove(), dur + 100);
   }
 }
+
+export const stripVN = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/đ/g, 'd').replace(/Đ/g, 'd').toLowerCase().trim().replace(/\s+/g, ' ');
+
+export function findDuplicate(name, existingNames) {
+  const a = stripVN(name); if (!a) return null;
+  const at = a.split(' ');
+  for (const ex of (existingNames || [])) {
+    const b = stripVN(ex), bt = b.split(' ');
+    if (a === b) return ex;
+    if (at.every(t => bt.includes(t)) || bt.every(t => at.includes(t))) return ex;
+    if (at[at.length - 1] === bt[bt.length - 1]) return ex;
+  }
+  return null;
+}
