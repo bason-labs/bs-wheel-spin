@@ -104,15 +104,14 @@ const subEl = document.getElementById('sub');
 const confettiEl = document.getElementById('confetti');
 
 const params = new URLSearchParams(location.search);
-const WID = params.get('w');
+const DEFAULT_WID = 'home';
+const WID = params.get('w') || DEFAULT_WID;
 const SEED = params.get('seed');
 
 let db = null, uid = null, T = null, config = null, state = {},
     rotation = 0, spinning = false, audioCtx = null, lastReason = null;
 
-if (!WID) {
-  showMessage('⚠️ Không tìm thấy vòng quay', 'Thiếu mã vòng quay trong đường dẫn (?w=...).');
-} else if (firebaseConfig.apiKey === 'PASTE_API_KEY') {
+if (firebaseConfig.apiKey === 'PASTE_API_KEY') {
   showMessage('⚙️ Chưa cấu hình Firebase', 'Dán cấu hình Firebase vào file này.');
 } else {
   startApp();
