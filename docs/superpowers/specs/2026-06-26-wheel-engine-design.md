@@ -125,6 +125,24 @@ admin page has a generic renderer for these kinds; no per-type form code.
 
 `title` is always collected (common field), so it is not part of `configFields`.
 
+### Addendum (sub-project 2): identity plumbing — additive, backward-compatible
+
+Supporting `identity` values `'device'`/`'group'` added three things. All are additive
+and do not change the `simple` entry or any existing call shape:
+
+- `assign`'s context gains `identityKey`: `assign(cur, { ui, mine, config, identityKey })`.
+  `wheel.html` sets it to `uid` for `'device'`, `ui.groupKey` for `'group'`, `null` for
+  `'none'`. Types that don't need it ignore it.
+- Optional `mineFrom(config, state, identityKey) → mineObject|null` — resolves the
+  actor's locked result. Implemented by identity-bearing types; `wheel.html` calls it
+  only when `identity !== 'none'`.
+- Optional `confirmSpin(config, state, ui) → boolean` — a pre-spin interactive gate
+  (may call `confirm()`). Absence means "always proceed". Used by `groupdiv` for the
+  duplicate-name guard.
+
+`claimKey` (already defined) is used by `'group'` types to persist which key the device
+owns; `'device'` types resolve via `uid` and return `null`.
+
 ## The Three Built-in Types
 
 | Type key | name (VI) | identity | config (besides title) | state | assign |
