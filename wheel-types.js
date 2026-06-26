@@ -27,9 +27,12 @@ export function makeWheelId() {
 
 export function landingRotation(curRotation, idx, segCount, rng = Math.random) {
   const SEG = 360 / segCount;
-  const base = (360 - (idx * SEG + SEG / 2)) % 360;        // brings segment center to top
-  const jitter = (rng() * 2 - 1) * (SEG / 2 - Math.min(8, SEG / 4)); // stay inside the wedge
-  return curRotation + (6 * 360 + base + jitter) - (curRotation % 360);
+  const base = (360 - (idx * SEG + SEG / 2)) % 360;
+  const jitter = (rng() * 2 - 1) * (SEG / 2 - Math.min(8, SEG / 4));
+  const targetMod = (((base + jitter) % 360) + 360) % 360;        // desired final angle (mod 360)
+  let result = curRotation + 6 * 360;                             // at least 6 full turns ahead
+  result += (((targetMod - (result % 360)) % 360) + 360) % 360;   // bump up to the target angle
+  return result;
 }
 
 export function discHtml(segs, rotation) {
