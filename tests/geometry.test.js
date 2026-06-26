@@ -39,3 +39,16 @@ test('discHtml renders one label per segment and inlines rotation', () => {
   assert.match(html, />A</);
   assert.match(html, />B</);
 });
+
+test('landingRotation guarantees >=6 turns and correct landing from large/odd current rotations', () => {
+  for (const cur of [359, 350.5, 7200 + 359, 12345.6]) {
+    for (const v of [0, 1, 0.5]) {
+      const r = landingRotation(cur, 3, 8, () => v);
+      assert.ok(r - cur >= 6 * 360, `cur=${cur} v=${v} delta=${r - cur}`);
+      const SEG = 360 / 8;
+      const atTop = ((360 - (r % 360)) % 360 + 360) % 360;
+      const lo = 3 * SEG, hi = 4 * SEG;
+      assert.ok(atTop > lo && atTop < hi, `cur=${cur} v=${v} atTop=${atTop}`);
+    }
+  }
+});
