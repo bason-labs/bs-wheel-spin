@@ -233,7 +233,7 @@ function saveForm() {
   if (err) { document.getElementById('formErr').textContent = err; return; }
   const wid = edit.id || makeWheelId();
   const node = edit.id && current[edit.id];
-  const createdTs = (node && node.config && node.config.createdTs) || Date.now();
+  const createdTs = (node && node.config && node.config.createdTs) ?? Date.now();   // ?? preserves a stored 0 (e.g. the seeded home wheel)
   store.saveConfig(wid, { ...cfg, type: edit.type, createdTs })
     .then(closeEditor)
     .catch(e => { document.getElementById('formErr').textContent = 'Lỗi lưu: ' + e.message; });
