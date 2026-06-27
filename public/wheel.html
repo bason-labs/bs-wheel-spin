@@ -85,7 +85,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { WHEEL_TYPES, discHtml, esc, deviceId, burst, chime, landingRotation } from "./engine/index.js";
 
 const firebaseConfig = {
@@ -105,7 +105,7 @@ const confettiEl = document.getElementById('confetti');
 
 const params = new URLSearchParams(location.search);
 const DEFAULT_WID = 'home';
-const WID = params.get('w') || DEFAULT_WID;
+let WID = params.get('w');   // when null (home route), resolved from the active pointer in startApp
 
 let db = null, uid = null, T = null, config = null, state = {},
     rotation = 0, spinning = false, audioCtx = null, lastReason = null, soundOn = true;
@@ -141,6 +141,13 @@ async function startApp() {
   if (params.get('emu') === '1') {
     const { connectDatabaseEmulator } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
     connectDatabaseEmulator(db, '127.0.0.1', 9000);
+  }
+  // Home route (no ?w=): show the "active" wheel chosen in admin, falling back to the home wheel.
+  if (!WID) {
+    try {
+      const s = await get(ref(db, 'wheels/_active'));
+      WID = (typeof s.val() === 'string' && s.val()) ? s.val() : DEFAULT_WID;
+    } catch (e) { WID = DEFAULT_WID; }
   }
   uid = deviceId();
   connDot.classList.add('on'); connText.textContent = 'Đã kết nối · trực tiếp';

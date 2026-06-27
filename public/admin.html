@@ -36,7 +36,10 @@
   .btn.primary{color:var(--ink);background:linear-gradient(95deg,var(--gold),#fb923c);border:none;}
   .btn.warn{color:#fde68a;border-color:rgba(251,191,36,.4);}
   .btn.danger{color:#fca5a5;border-color:rgba(239,68,68,.4);}
+  .btn.good{color:#86efac;border-color:rgba(34,197,94,.4);}
   .btn.mini{padding:6px 10px;font-size:12px;}
+  .wheelcard.active{border-color:rgba(34,197,94,.45);box-shadow:0 0 0 1px rgba(34,197,94,.25);}
+  .homebadge{font-size:11px;font-weight:800;color:#22c55e;margin-left:8px;}
 
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;}
 
@@ -166,6 +169,7 @@ function makeFirebaseStore(db) {
     saveConfig: (id, c) => set(ref(db, `wheels/${id}/config`), c),
     resetDraws: id => remove(ref(db, `wheels/${id}/state`)),
     deleteWheel: id => remove(ref(db, `wheels/${id}`)),
+    setActive: id => set(ref(db, 'wheels/_active'), id),
   };
 }
 
@@ -182,18 +186,25 @@ function startDashboard() {
 }
 
 /* ---------- dashboard list ---------- */
+// The wheel shown on the home route ("/") is whichever id is stored at wheels/_active,
+// falling back to 'home'. _active is a pointer, not a wheel, so it's filtered out of the list.
+const activeOf = wheels => (typeof wheels._active === 'string' && wheels._active) ? wheels._active : 'home';
+
 function renderList(wheels) {
-  const ids = Object.keys(wheels);
+  const activeId = activeOf(wheels);
+  const ids = Object.keys(wheels).filter(k => k !== '_active');
   if (!ids.length) { listEl.innerHTML = `<p class="muted">Chưa có vòng quay nào. Nhấn “＋ Tạo vòng quay”.</p>`; return; }
   listEl.innerHTML = ids.map(id => {
     const cfg = (wheels[id] && wheels[id].config) || {};
     const t = WHEEL_TYPES[cfg.type];
     const badge = t ? t.name : 'loại không hỗ trợ';
     const link = `wheel.html?w=${encodeURIComponent(id)}`;
-    return `<div class="wheelcard" data-id="${esc(id)}">
-      <div class="wc-head"><span class="wc-title">${esc(cfg.title || id)}</span><span class="badge2">${esc(badge)}</span></div>
+    const isActive = id === activeId;
+    return `<div class="wheelcard${isActive ? ' active' : ''}" data-id="${esc(id)}">
+      <div class="wc-head"><span class="wc-title">${esc(cfg.title || id)}${isActive ? ' <span class="homebadge">● Trang chủ</span>' : ''}</span><span class="badge2">${esc(badge)}</span></div>
       <div class="wc-link"><a href="${esc(link)}" target="_blank">${esc(link)}</a><button class="btn mini" data-copy="${esc(link)}">Sao chép</button></div>
       <div class="wc-actions">
+        ${isActive ? '' : `<button class="btn good" data-active="${esc(id)}">Đặt làm trang chủ</button>`}
         <button class="btn" data-edit="${esc(id)}"${t ? '' : ' disabled'}>Sửa</button>
         <button class="btn warn" data-reset="${esc(id)}">Reset lượt</button>
         <button class="btn danger" data-del="${esc(id)}">Xoá</button>
@@ -206,9 +217,16 @@ listEl.addEventListener('click', e => {
   if (t.dataset.copy) {
     const url = location.origin + location.pathname.replace(/admin\.html$/, '') + t.dataset.copy;
     navigator.clipboard?.writeText(url); t.textContent = 'Đã chép'; setTimeout(() => t.textContent = 'Sao chép', 1200);
-  } else if (t.dataset.edit) openEditor(t.dataset.edit);
+  } else if (t.dataset.active) store.setActive(t.dataset.active);
+  else if (t.dataset.edit) openEditor(t.dataset.edit);
   else if (t.dataset.reset) { if (confirm('Xoá toàn bộ lượt quay của vòng này?')) store.resetDraws(t.dataset.reset); }
-  else if (t.dataset.del) { if (confirm('Xoá hẳn vòng quay này?')) store.deleteWheel(t.dataset.del); }
+  else if (t.dataset.del) {
+    if (confirm('Xoá hẳn vòng quay này?')) {
+      const wasActive = t.dataset.del === activeOf(current);
+      store.deleteWheel(t.dataset.del);
+      if (wasActive) store.setActive('home');   // home route falls back cleanly
+    }
+  }
 });
 
 /* ---------- create / edit ---------- */
