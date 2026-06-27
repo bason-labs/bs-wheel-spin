@@ -108,7 +108,20 @@ const DEFAULT_WID = 'home';
 const WID = params.get('w') || DEFAULT_WID;
 
 let db = null, uid = null, T = null, config = null, state = {},
-    rotation = 0, spinning = false, audioCtx = null, lastReason = null;
+    rotation = 0, spinning = false, audioCtx = null, lastReason = null, soundOn = true;
+
+const HEXt = /^#[0-9a-fA-F]{6}$/;
+function applyTheme(theme) {
+  if (!theme) { soundOn = true; return; }
+  soundOn = theme.sound !== false;
+  if (theme.accent && HEXt.test(theme.accent)) document.documentElement.style.setProperty('--gold', theme.accent);
+  if (theme.bg && HEXt.test(theme.bg)) {
+    const accent = (theme.accent && HEXt.test(theme.accent)) ? theme.accent : '#10b981';
+    document.body.style.background =
+      `radial-gradient(900px 500px at 12% -5%, ${accent}33, transparent 60%),` +
+      `linear-gradient(160deg, ${theme.bg} 0%, ${theme.bg} 100%)`;
+  }
+}
 
 if (firebaseConfig.apiKey === 'PASTE_API_KEY') {
   showMessage('⚙️ Chưa cấu hình Firebase', 'Dán cấu hình Firebase vào file này.');
@@ -137,6 +150,7 @@ async function startApp() {
     if (!config) { showMessage('Vòng quay chưa được thiết lập', 'Quản trị viên chưa tạo cấu hình cho vòng quay này.'); return; }
     T = WHEEL_TYPES[config.type];
     if (!T) { showMessage('Loại vòng quay không hỗ trợ', `type = ${config.type}`); return; }
+    applyTheme(config.theme);
     if (!spinning) buildUI();
   });
 }
@@ -240,7 +254,7 @@ async function doSpin() {
 
   setTimeout(() => {
     spinning = false;
-    chime(audioCtx);
+    if (soundOn) chime(audioCtx);
     burst({ color: seg.color, dark: seg.dark }, confettiEl);
     buildUI();
   }, 4700);
