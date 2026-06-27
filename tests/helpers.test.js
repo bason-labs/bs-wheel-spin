@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { esc, deviceId, makeWheelId } from '../wheel-types.js';
+import { esc, deviceId, makeWheelId } from '../public/engine/index.js';
 
 test('esc escapes HTML-significant characters', () => {
   assert.equal(esc('<b>&"x"'), '&lt;b&gt;&amp;&quot;x&quot;');

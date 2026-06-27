@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WHEEL_TYPES } from '../wheel-types.js';
+import { WHEEL_TYPES } from '../public/engine/index.js';
 
 const T = () => WHEEL_TYPES.simple;
 
