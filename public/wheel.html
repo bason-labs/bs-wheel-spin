@@ -85,7 +85,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { WHEEL_TYPES, discHtml, esc, deviceId, burst, chime, landingRotation } from "./engine/index.js";
 
 const firebaseConfig = {
@@ -106,7 +106,6 @@ const confettiEl = document.getElementById('confetti');
 const params = new URLSearchParams(location.search);
 const DEFAULT_WID = 'home';
 const WID = params.get('w') || DEFAULT_WID;
-const SEED = params.get('seed');
 
 let db = null, uid = null, T = null, config = null, state = {},
     rotation = 0, spinning = false, audioCtx = null, lastReason = null;
@@ -124,20 +123,12 @@ function showMessage(h, body) {
 async function startApp() {
   const fb = initializeApp(firebaseConfig);
   db = getDatabase(fb);
+  if (params.get('emu') === '1') {
+    const { connectDatabaseEmulator } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+    connectDatabaseEmulator(db, '127.0.0.1', 9000);
+  }
   uid = deviceId();
   connDot.classList.add('on'); connText.textContent = 'Đã kết nối · trực tiếp';
-
-  // TEMP dev seed — remove in sub-project 3 (admin page supersedes this)
-  const SEED_TITLES = { simple: 'Vòng quay thử nghiệm', topicgroup: 'Vòng quay chủ đề', groupdiv: 'Vòng quay chia nhóm' };
-  if (SEED && WHEEL_TYPES[SEED]) {
-    try {
-      const cfgRef = ref(db, `wheels/${WID}/config`);
-      const snap = await get(cfgRef);
-      if (!snap.exists()) {
-        await set(cfgRef, { type: SEED, title: SEED_TITLES[SEED] || SEED, createdTs: Date.now(), ...WHEEL_TYPES[SEED].defaultConfig() });
-      }
-    } catch (e) { console.warn('seed write skipped:', e.message); }
-  }
 
   onValue(ref(db, `wheels/${WID}`), snap => {
     const v = snap.val() || {};

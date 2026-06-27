@@ -2,6 +2,10 @@
   "database": {
     "rules": "database.rules.json"
   },
+  "emulators": {
+    "database": { "port": 9000 },
+    "ui": { "enabled": false }
+  },
   "hosting": {
     "public": "public",
     "ignore": [
@@ -10,6 +14,7 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      { "source": "/admin", "destination": "/admin.html" },
       { "source": "/groups", "destination": "/groups.html" },
       { "source": "/", "destination": "/wheel.html" }
     ],
