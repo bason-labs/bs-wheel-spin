@@ -59,6 +59,12 @@ Current types:
 | `simple` | Quay ngẫu nhiên | Spin to pick one option; optional remove-after-pick |
 | `groupdiv` | Chia nhóm | People type a name, spin once, get a group (max per group), dup-name guard |
 | `topicgroup` | Chủ đề cho nhóm | Each group draws one unique topic (lock is per group-key); a device claims a group and is shown its result on reload |
+| `custom` | Tùy chỉnh | Hand-defined segments (label + colour + optional integer weight); host-screen picker, optional remove-after-pick |
+
+**Theming:** any wheel can carry an optional `config.theme = { accent?, bg?, sound? }`
+(set in the admin editor's "Giao diện" section). `accent`/`bg` are hex colours applied via
+CSS variables on the participant page; `sound:false` mutes the spin chime. Wheels without a
+theme look and sound exactly as before.
 
 ## Source layout
 
@@ -78,6 +84,7 @@ public/
       simple.js
       topicgroup.js
       groupdiv.js
+      custom.js
 tests/                # Node node:test; import ../public/engine/index.js
 docs/superpowers/     # specs + plans
 firebase.json         # hosting rewrites + cache headers + DB rules pointer
