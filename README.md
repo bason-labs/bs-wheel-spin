@@ -76,7 +76,7 @@ public/
   engine/
     index.js          # barrel — the public import surface
     helpers.js        # esc, deviceId, makeWheelId, stripVN, findDuplicate
-    geometry.js       # PALETTE, landingRotation, discHtml
+    geometry.js       # PALETTE, landingRotation, discHtml, darken
     celebration.js    # chime, burst
     adminforms.js     # config-form render/read for the admin page
     registry.js       # assembles WHEEL_TYPES from the type modules

@@ -64,13 +64,13 @@ const segmentsField = (f, segs) =>
 
 const themeSection = theme => {
   const t = theme || {};
-  return `<div class="field themefield" data-kind="theme">
-    <label>Giao diện (tùy chọn)</label>
+  return `<details class="field themefield" data-kind="theme"${theme ? ' open' : ''}>
+    <summary>Giao diện (tùy chọn)</summary>
     <div class="themerow">
       <span>Màu nhấn</span><input type="color" data-theme="accent" value="${esc(t.accent || '#fbbf24')}">
       <span>Nền</span><input type="color" data-theme="bg" value="${esc(t.bg || '#0b1020')}">
       <label class="soundlab"><input type="checkbox" data-theme="sound"${t.sound === false ? '' : ' checked'}> Âm thanh</label>
-    </div></div>`;
+    </div></details>`;
 };
 
 export function renderConfigForm(typeEntry, config) {
