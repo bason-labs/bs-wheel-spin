@@ -58,7 +58,7 @@ Current types:
 |---|---|---|
 | `simple` | Quay ngẫu nhiên | Spin to pick one option; optional remove-after-pick |
 | `groupdiv` | Chia nhóm | People type a name, spin once, get a group (max per group), dup-name guard |
-| `topicgroup` | Chủ đề cho nhóm | Each group draws one unique topic; one device = one group |
+| `topicgroup` | Chủ đề cho nhóm | Each group draws one unique topic (lock is per group-key); a device claims a group and is shown its result on reload |
 
 ## Source layout
 
