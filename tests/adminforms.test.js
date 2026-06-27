@@ -50,3 +50,20 @@ test('renderConfigForm escapes user values', () => {
   assert.ok(!html.includes('<x>"'));         // title escaped
   assert.match(html, /&lt;x&gt;/);
 });
+
+test('renderConfigForm(custom) renders segment rows (color+label+weight) + theme section', () => {
+  const cfg = WHEEL_TYPES.custom.defaultConfig();
+  const html = renderConfigForm(WHEEL_TYPES.custom, { title: 'C', ...cfg });
+  assert.equal((html.match(/data-segment-row=/g) || []).length, cfg.segments.length);
+  assert.match(html, /class="seg-label"/);
+  assert.match(html, /class="seg-weight"/);
+  assert.match(html, /data-theme="accent"/);
+  assert.match(html, /data-theme="bg"/);
+  assert.match(html, /data-theme="sound"/);
+});
+
+test('theme section is present for a topicgroup wheel too (cross-type)', () => {
+  const cfg = WHEEL_TYPES.topicgroup.defaultConfig();
+  const html = renderConfigForm(WHEEL_TYPES.topicgroup, { title: 'T', ...cfg });
+  assert.match(html, /data-theme="accent"/);
+});

@@ -45,6 +45,34 @@ const groupsField = (f, groups) =>
     <div class="rows">${(groups || []).map(groupRow).join('')}</div>
     <button type="button" class="addgroup" data-add="1">＋ Thêm nhóm</button></div>`;
 
+const colorField = (f, value) =>
+  `<div class="field"><label>${esc(f.label)}</label>
+    <input type="color" data-field="${esc(f.key)}" value="${esc(value || '#10b981')}"></div>`;
+
+export const segmentRow = s =>
+  `<div class="grow" data-segment-row="1">
+    <input type="color" value="${esc((s && s.color) || '#10b981')}">
+    <input type="text" class="seg-label" value="${esc((s && s.label) || '')}" placeholder="Tên mục">
+    <input type="number" class="seg-weight" min="1" value="${esc((s && s.weight) || '')}" placeholder="x1" style="width:64px">
+    <button type="button" class="rm" data-rm="1">✕</button></div>`;
+
+const segmentsField = (f, segs) =>
+  `<div class="field segmentsfield" data-field="${esc(f.key)}" data-kind="segments">
+    <label>${esc(f.label)}</label>
+    <div class="rows">${(segs || []).map(segmentRow).join('')}</div>
+    <button type="button" class="addseg" data-add="1">＋ Thêm mục</button></div>`;
+
+const themeSection = theme => {
+  const t = theme || {};
+  return `<div class="field themefield" data-kind="theme">
+    <label>Giao diện (tùy chọn)</label>
+    <div class="themerow">
+      <span>Màu nhấn</span><input type="color" data-theme="accent" value="${esc(t.accent || '#fbbf24')}">
+      <span>Nền</span><input type="color" data-theme="bg" value="${esc(t.bg || '#0b1020')}">
+      <label class="soundlab"><input type="checkbox" data-theme="sound"${t.sound === false ? '' : ' checked'}> Âm thanh</label>
+    </div></div>`;
+};
+
 export function renderConfigForm(typeEntry, config) {
   const c = config || {};
   let html = textField('title', 'Tiêu đề', c.title);
@@ -55,7 +83,10 @@ export function renderConfigForm(typeEntry, config) {
     else if (f.kind === 'bool') html += boolField(f, v);
     else if (f.kind === 'list') html += listField(f, v);
     else if (f.kind === 'groups') html += groupsField(f, v);
+    else if (f.kind === 'color') html += colorField(f, v);
+    else if (f.kind === 'segments') html += segmentsField(f, v);
   }
+  html += themeSection(c.theme);   // theme is cross-type, always offered (like title)
   return html;
 }
 
@@ -76,7 +107,26 @@ export function readConfigForm(rootEl, typeEntry) {
         color: r.querySelector('input[type="color"]').value,
       })).filter(r => r.name) : [];
       out[f.key] = groupsFromRows(rows);
+    } else if (f.kind === 'color') {
+      out[f.key] = el ? el.value : '';
+    } else if (f.kind === 'segments') {
+      out[f.key] = el ? Array.from(el.querySelectorAll('[data-segment-row]')).map(r => {
+        const w = Number(r.querySelector('.seg-weight').value);
+        const seg = { label: r.querySelector('.seg-label').value.trim(), color: r.querySelector('input[type="color"]').value };
+        if (Number.isInteger(w) && w > 1) seg.weight = w;
+        return seg;
+      }).filter(s => s.label) : [];
     }
   }
+  // Theme is cross-type; include only non-default values so a plain wheel saves no theme.
+  const HEXc = /^#[0-9a-fA-F]{6}$/;
+  const aEl = rootEl.querySelector('[data-theme="accent"]');
+  const bEl = rootEl.querySelector('[data-theme="bg"]');
+  const sEl = rootEl.querySelector('[data-theme="sound"]');
+  const theme = {};
+  if (aEl && HEXc.test(aEl.value) && aEl.value.toLowerCase() !== '#fbbf24') theme.accent = aEl.value;
+  if (bEl && HEXc.test(bEl.value) && bEl.value.toLowerCase() !== '#0b1020') theme.bg = bEl.value;
+  if (sEl && !sEl.checked) theme.sound = false;
+  if (Object.keys(theme).length) out.theme = theme;
   return out;
 }
