@@ -6,6 +6,8 @@ const allMemberNames = state => {
   return Object.values(m).flat();
 };
 
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
 export const groupdiv = {
   key: 'groupdiv',
   name: 'Chia nhóm',
@@ -29,6 +31,7 @@ export const groupdiv = {
     if (!Array.isArray(groups) || !groups.length || !groups.every(g => String(g.name || '').trim()))
       return 'Cần ít nhất 1 nhóm có tên.';
     if (!(Number(config.maxPerGroup) >= 1)) return 'Số người tối đa mỗi nhóm phải >= 1.';
+    if (groups.some(g => !HEX.test(g.color) || !HEX.test(g.dark))) return 'Màu nhóm không hợp lệ (cần #rrggbb).';
     return null;
   },
 

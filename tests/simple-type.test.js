@@ -64,3 +64,11 @@ test('canSpin false when nothing available', () => {
   assert.equal(T().canSpin(cfg, { picked: [] }, {}, null), true);
   assert.equal(T().canSpin(cfg, { picked: [0] }, {}, null), false);
 });
+
+test('simple.resultView guards an out-of-bounds pick after options shrink', () => {
+  const cfg = { options: ['a', 'b'], removeAfterPick: false };
+  // state references an index no longer present (options were shortened)
+  const html = WHEEL_TYPES.simple.resultView(cfg, { picked: [5] });
+  assert.ok(!html.includes('undefined'));
+  assert.match(html, />\?</);   // renders the '?' placeholder, not "undefined"
+});
