@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản trị vòng quay</title>
+<style>
+  :root{ --gold:#fbbf24; --ink:#0b1020; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  [hidden]{display:none!important;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;color:#f8fafc;min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 12% -5%, rgba(16,185,129,.20), transparent 60%),
+      radial-gradient(900px 500px at 88% -5%, rgba(139,92,246,.20), transparent 60%),
+      linear-gradient(160deg,#0b1020 0%,#11162e 55%,#0b1020 100%);
+    padding:26px 16px 60px;}
+  a{color:#93c5fd;}
+  h1{font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.5px;}
+  h2{font-size:18px;font-weight:800;margin-bottom:12px;}
+  .wrap{max-width:680px;margin:0 auto;}
+  .muted{opacity:.55;font-size:14px;margin-top:18px;text-align:center;}
+
+  /* PIN screen */
+  .pinscreen{min-height:80vh;display:flex;align-items:center;justify-content:center;}
+  .pincard{width:100%;max-width:360px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;text-align:center;}
+  .pincard h2{margin-bottom:16px;}
+  .pincard input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--line);font-size:18px;text-align:center;letter-spacing:4px;background:rgba(255,255,255,.95);color:var(--ink);font-weight:700;}
+  .pinerr{color:#fca5a5;font-size:13px;min-height:18px;margin-top:10px;}
+
+  /* buttons */
+  .btn{padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:#f8fafc;font-weight:700;font-size:14px;cursor:pointer;transition:transform .1s,opacity .2s;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:scale(.97);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn.primary{color:var(--ink);background:linear-gradient(95deg,var(--gold),#fb923c);border:none;}
+  .btn.warn{color:#fde68a;border-color:rgba(251,191,36,.4);}
+  .btn.danger{color:#fca5a5;border-color:rgba(239,68,68,.4);}
+  .btn.mini{padding:6px 10px;font-size:12px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;}
+
+  /* wheel cards */
+  .wheelcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:14px;}
+  .wc-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .wc-title{font-size:18px;font-weight:800;}
+  .badge2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#cbd5e1;background:rgba(255,255,255,.08);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap;}
+  .wc-link{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;overflow:hidden;}
+  .wc-link a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .wc-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  /* editor + form */
+  .editor-card{background:var(--card);border:1px solid rgba(251,191,36,.35);border-radius:18px;padding:20px;margin-bottom:22px;}
+  .typepick{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .field{position:relative;width:100%;margin-bottom:18px;}
+  .field > label{position:absolute;top:-9px;left:14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);background:#0e1326;padding:1px 8px;border-radius:6px;}
+  .field > input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--line);font-size:16px;outline:none;background:rgba(255,255,255,.95);color:var(--ink);font-weight:600;}
+  .field > input:focus{box-shadow:0 0 0 4px rgba(251,191,36,.3);}
+  .checkrow{margin-bottom:18px;font-size:15px;font-weight:600;}
+  .checkrow input{width:18px;height:18px;vertical-align:-3px;margin-right:8px;}
+  .rows{display:flex;flex-direction:column;gap:8px;margin:6px 0 10px;}
+  .lrow,.grow{display:flex;gap:8px;align-items:center;}
+  .lrow input,.grow .gname{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.95);color:var(--ink);font-weight:600;}
+  .grow input[type=color]{width:42px;height:40px;border:none;border-radius:10px;background:none;cursor:pointer;flex-shrink:0;}
+  .rm{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);border-radius:10px;width:38px;height:38px;cursor:pointer;font-weight:700;flex-shrink:0;}
+  .addrow,.addgroup{align-self:flex-start;background:var(--card);border:1px dashed var(--line);color:#cbd5e1;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:700;font-size:13px;}
+  .formerr{color:#fca5a5;font-size:14px;min-height:18px;margin:6px 0;}
+  .warn-note{color:#fde68a;font-size:13px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:10px 12px;margin-bottom:14px;}
+  .ebar{display:flex;gap:10px;margin-top:8px;}
+  .setup{max-width:520px;margin:40px auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;line-height:1.6;font-size:14px;}
+</style>
+</head>
+<body>
+  <div id="pin" class="pinscreen">
+    <div class="pincard">
+      <h2>🔒 Khu vực quản trị</h2>
+      <input id="pinInput" type="password" inputmode="numeric" placeholder="Nhập mã PIN" autocomplete="off">
+      <div class="pinerr" id="pinErr"></div>
+      <button class="btn primary" id="pinBtn" style="margin-top:14px;width:100%;">Mở khoá</button>
+    </div>
+  </div>
+
+  <div id="admin" class="wrap" hidden>
+    <div class="topbar">
+      <h1>Quản trị vòng quay</h1>
+      <button id="newBtn" class="btn primary">＋ Tạo vòng quay</button>
+    </div>
+    <div id="editor" hidden></div>
+    <div id="list"></div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { WHEEL_TYPES, makeWheelId, esc } from "./engine/index.js";
+import { renderConfigForm, readConfigForm, listRow, groupRow } from "./engine/adminforms.js";
+
+const firebaseConfig = {
+  apiKey:      "AIzaSyCiRDS3QlL00uAfp45V6ZmA3IcZXK2EjCo",
+  authDomain:  "wheel-spin-a6f34.firebaseapp.com",
+  databaseURL: "https://wheel-spin-a6f34-default-rtdb.firebaseio.com",
+  projectId:   "wheel-spin-a6f34",
+  appId:       "1:622383530807:web:c64191d81c6c7cc1a190b2"
+};
+
+const ADMIN_PIN = '2468';   // EDIT ME — client-side only, not real security.
+
+const params = new URLSearchParams(location.search);
+const pinScreen = document.getElementById('pin');
+const adminEl = document.getElementById('admin');
+const listEl = document.getElementById('list');
+const editorEl = document.getElementById('editor');
+
+let db = null, store = null, current = {}, edit = null;   // edit = { type, id } while a form is open
+
+if (firebaseConfig.apiKey === 'PASTE_API_KEY') {
+  document.body.innerHTML = `<div class="setup"><h2>⚙️ Chưa cấu hình Firebase</h2><p>Dán cấu hình Firebase vào file này.</p></div>`;
+} else {
+  const fb = initializeApp(firebaseConfig);
+  db = getDatabase(fb);
+  if (params.get('emu') === '1') {
+    const { connectDatabaseEmulator } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+    connectDatabaseEmulator(db, '127.0.0.1', 9000);
+  }
+  wirePin();
+}
+
+/* ---------- PIN gate ---------- */
+function wirePin() {
+  const tryPin = () => {
+    const v = document.getElementById('pinInput').value;
+    if (v === ADMIN_PIN) { try { sessionStorage.setItem('adminUnlocked', '1'); } catch (e) {} unlock(); }
+    else { document.getElementById('pinErr').textContent = 'Sai mã PIN'; }
+  };
+  document.getElementById('pinBtn').addEventListener('click', tryPin);
+  document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryPin(); });
+  let unlocked = false;
+  try { unlocked = sessionStorage.getItem('adminUnlocked') === '1'; } catch (e) {}
+  if (unlocked) unlock(); else document.getElementById('pinInput').focus();
+}
+function unlock() {
+  pinScreen.hidden = true; adminEl.hidden = false;
+  // Build the data store. Tests/offline use can inject an in-memory store via
+  // window.__WHEEL_STORE__ BEFORE unlocking; production never sets it, so this
+  // falls through to the real Firebase store. Inert in production.
+  store = (typeof window !== 'undefined' && window.__WHEEL_STORE__) || makeFirebaseStore(db);
+  startDashboard();
+}
+
+/* ---------- store ---------- */
+function makeFirebaseStore(db) {
+  return {
+    listWheels: cb => onValue(ref(db, 'wheels'), s => cb(s.val() || {})),
+    getConfig:  id => get(ref(db, `wheels/${id}/config`)).then(s => s.val()),
+    saveConfig: (id, c) => set(ref(db, `wheels/${id}/config`), c),
+    resetDraws: id => remove(ref(db, `wheels/${id}/state`)),
+    deleteWheel: id => remove(ref(db, `wheels/${id}`)),
+  };
+}
+
+function startDashboard() {
+  store.listWheels(w => { current = w; renderList(w); });
+}
+
+/* ---------- dashboard list ---------- */
+function renderList(wheels) {
+  const ids = Object.keys(wheels);
+  if (!ids.length) { listEl.innerHTML = `<p class="muted">Chưa có vòng quay nào. Nhấn “＋ Tạo vòng quay”.</p>`; return; }
+  listEl.innerHTML = ids.map(id => {
+    const cfg = (wheels[id] && wheels[id].config) || {};
+    const t = WHEEL_TYPES[cfg.type];
+    const badge = t ? t.name : 'loại không hỗ trợ';
+    const link = `wheel.html?w=${encodeURIComponent(id)}`;
+    return `<div class="wheelcard" data-id="${esc(id)}">
+      <div class="wc-head"><span class="wc-title">${esc(cfg.title || id)}</span><span class="badge2">${esc(badge)}</span></div>
+      <div class="wc-link"><a href="${esc(link)}" target="_blank">${esc(link)}</a><button class="btn mini" data-copy="${esc(link)}">Sao chép</button></div>
+      <div class="wc-actions">
+        <button class="btn" data-edit="${esc(id)}"${t ? '' : ' disabled'}>Sửa</button>
+        <button class="btn warn" data-reset="${esc(id)}">Reset lượt</button>
+        <button class="btn danger" data-del="${esc(id)}">Xoá</button>
+      </div></div>`;
+  }).join('');
+}
+
+listEl.addEventListener('click', e => {
+  const t = e.target;
+  if (t.dataset.copy) {
+    const url = location.origin + location.pathname.replace(/admin\.html$/, '') + t.dataset.copy;
+    navigator.clipboard?.writeText(url); t.textContent = 'Đã chép'; setTimeout(() => t.textContent = 'Sao chép', 1200);
+  } else if (t.dataset.edit) openEditor(t.dataset.edit);
+  else if (t.dataset.reset) { if (confirm('Xoá toàn bộ lượt quay của vòng này?')) store.resetDraws(t.dataset.reset); }
+  else if (t.dataset.del) { if (confirm('Xoá hẳn vòng quay này?')) store.deleteWheel(t.dataset.del); }
+});
+
+/* ---------- create / edit ---------- */
+document.getElementById('newBtn').addEventListener('click', openCreate);
+
+function openCreate() {
+  edit = null;
+  editorEl.hidden = false;
+  editorEl.innerHTML = `<div class="editor-card"><h2>Chọn loại vòng quay</h2>
+    <div class="typepick">${Object.values(WHEEL_TYPES).map(t => `<button class="btn" data-type="${esc(t.key)}">${esc(t.name)}</button>`).join('')}</div>
+    <div class="ebar"><button class="btn" data-cancel="1">Huỷ</button></div></div>`;
+  editorEl.scrollIntoView({ behavior: 'smooth' });
+}
+
+function openForm(type, config, id) {
+  edit = { type, id };
+  const node = id && current[id];
+  const warn = (node && node.state) ? `<p class="warn-note">Vòng quay đã có lượt quay — cân nhắc “Reset lượt” sau khi đổi nhóm/chủ đề.</p>` : '';
+  editorEl.hidden = false;
+  editorEl.innerHTML = `<div class="editor-card">
+    <h2>${id ? 'Sửa' : 'Tạo'} — ${esc(WHEEL_TYPES[type].name)}</h2>
+    ${warn}
+    <div id="formBody">${renderConfigForm(WHEEL_TYPES[type], config)}</div>
+    <div class="formerr" id="formErr"></div>
+    <div class="ebar"><button class="btn primary" data-save="1">Lưu</button><button class="btn" data-cancel="1">Huỷ</button></div>
+  </div>`;
+  editorEl.scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeEditor() { edit = null; editorEl.hidden = true; editorEl.innerHTML = ''; }
+
+async function openEditor(id) {
+  const node = current[id];
+  if (!node || !node.config) return;
+  openForm(node.config.type, node.config, id);
+}
+
+function saveForm() {
+  if (!edit) return;
+  const cfg = readConfigForm(document.getElementById('formBody'), WHEEL_TYPES[edit.type]);
+  const err = WHEEL_TYPES[edit.type].validate(cfg);
+  if (err) { document.getElementById('formErr').textContent = err; return; }
+  const wid = edit.id || makeWheelId();
+  const node = edit.id && current[edit.id];
+  const createdTs = (node && node.config && node.config.createdTs) || Date.now();
+  store.saveConfig(wid, { ...cfg, type: edit.type, createdTs })
+    .then(closeEditor)
+    .catch(e => { document.getElementById('formErr').textContent = 'Lỗi lưu: ' + e.message; });
+}
+
+/* one delegated handler for all editor interactions (attached once) */
+editorEl.addEventListener('click', e => {
+  const t = e.target;
+  if (t.dataset.type) { openForm(t.dataset.type, WHEEL_TYPES[t.dataset.type].defaultConfig(), null); }
+  else if (t.dataset.cancel) closeEditor();
+  else if (t.dataset.save) saveForm();
+  else if (t.dataset.add) {
+    const field = t.closest('[data-field]');
+    const rows = field.querySelector('.rows');
+    if (field.dataset.kind === 'list') rows.insertAdjacentHTML('beforeend', listRow(''));
+    else if (field.dataset.kind === 'groups') rows.insertAdjacentHTML('beforeend', groupRow(null));
+  } else if (t.dataset.rm) {
+    const row = t.closest('[data-list-row],[data-group-row]');
+    if (row) row.remove();
+  }
+});
+</script>
+</body>
+</html>
