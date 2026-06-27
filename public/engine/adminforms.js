@@ -64,7 +64,7 @@ const segmentsField = (f, segs) =>
 
 const themeSection = theme => {
   const t = theme || {};
-  return `<details class="field themefield" data-kind="theme"${theme ? ' open' : ''}>
+  return `<details class="field themefield" data-kind="theme" open>
     <summary>Giao diện (tùy chọn)</summary>
     <div class="themerow">
       <span>Màu nhấn</span><input type="color" data-theme="accent" value="${esc(t.accent || '#fbbf24')}">

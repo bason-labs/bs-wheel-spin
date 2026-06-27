@@ -72,6 +72,8 @@
   .soundlab{display:inline-flex;align-items:center;gap:2px;margin-left:auto;font-weight:600;}
   .themefield > summary{cursor:pointer;list-style:none;display:inline-block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);background:#0e1326;padding:3px 10px;border-radius:6px;margin-bottom:10px;}
   .themefield > summary::-webkit-details-marker{display:none;}
+  .themefield > summary::before{content:'▾ ';color:#fbbf24;}
+  .themefield:not([open]) > summary::before{content:'▸ ';}
   .formerr{color:#fca5a5;font-size:14px;min-height:18px;margin:6px 0;}
   .warn-note{color:#fde68a;font-size:13px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:10px 12px;margin-bottom:14px;}
   .ebar{display:flex;gap:10px;margin-top:8px;}
