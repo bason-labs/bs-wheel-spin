@@ -20,11 +20,19 @@
     ],
     "headers": [
       {
-        "source": "**/*.@(js|html)",
+        "source": "**/*.@(js|html|json)",
         "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
       },
       {
-        "source": "@(/|/admin|/groups)",
+        "source": "/",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+      },
+      {
+        "source": "/admin",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+      },
+      {
+        "source": "/groups",
         "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
       }
     ]
