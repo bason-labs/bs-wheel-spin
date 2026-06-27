@@ -5,6 +5,8 @@ import { esc } from '../helpers.js';
 export const takenTopicSet = state =>
   new Set(Object.values((state && state.groups) || {}).map(a => a.topic));
 
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
 export const topicgroup = {
   key: 'topicgroup',
   name: 'Chủ đề cho nhóm',
@@ -29,6 +31,7 @@ export const topicgroup = {
     if (!Array.isArray(topics) || !topics.some(t => String(t).trim())) return 'Cần ít nhất 1 chủ đề.';
     if (!Array.isArray(groups) || !groups.length) return 'Cần ít nhất 1 nhóm.';
     if (groups.length > topics.length) return 'Số chủ đề phải lớn hơn hoặc bằng số nhóm.';
+    if (groups.some(g => !HEX.test(g.color) || !HEX.test(g.dark))) return 'Màu nhóm không hợp lệ (cần #rrggbb).';
     return null;
   },
 

@@ -59,7 +59,7 @@ export const simple = {
     const p = PALETTE[i % PALETTE.length];
     return `<div class="result-card"><div class="crown">🎉</div>
         <div class="who">Kết quả</div>
-        <div class="grp" style="background:linear-gradient(135deg,${p.color},${p.dark})">${esc(config.options[i])}</div>
+        <div class="grp" style="background:linear-gradient(135deg,${p.color},${p.dark})">${esc(config.options[i] ?? '?')}</div>
         <div class="note">Nhấn QUAY để quay tiếp</div></div>`;
   },
   panel(config, state) {
@@ -67,7 +67,7 @@ export const simple = {
     const remaining = config.removeAfterPick ? (config.options.length - picked.length) : '∞';
     const items = picked.slice().reverse().map((i, n) => {
       const p = PALETTE[i % PALETTE.length];
-      return `<li class="member"><span class="avatar" style="--gc:${p.color};--gcd:${p.dark}">${picked.length - n}</span><span>${esc(config.options[i])}</span></li>`;
+      return `<li class="member"><span class="avatar" style="--gc:${p.color};--gcd:${p.dark}">${picked.length - n}</span><span>${esc(config.options[i] ?? '?')}</span></li>`;
     }).join('') || `<li class="empty">Chưa quay lần nào...</li>`;
     return `<div class="groups"><div class="group" style="--gc:#fbbf24;--gcd:#f59e0b;border-color:#fbbf2466">
         <div class="ghead"><span class="gname">Đã quay</span><span class="gcount">Còn lại: ${remaining}</span></div>

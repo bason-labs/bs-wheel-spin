@@ -68,3 +68,9 @@ test('mineFrom + claimKey + canSpin', () => {
   assert.equal(T().canSpin(c, state, {groupKey:'g1'}, null), false);
   assert.equal(T().canSpin(c, state, {groupKey:'g2'}, {groupKey:'g2',topic:0}), false);
 });
+
+test('topicgroup.validate rejects a group with a non-hex color', () => {
+  const cfg = WHEEL_TYPES.topicgroup.defaultConfig();
+  cfg.groups[0] = { key: 'g1', name: 'G1', color: 'red);x', dark: '#000000' };
+  assert.match(WHEEL_TYPES.topicgroup.validate(cfg), /màu|color|hex/i);
+});
