@@ -3,5 +3,6 @@
 import { simple } from './types/simple.js';
 import { topicgroup } from './types/topicgroup.js';
 import { groupdiv } from './types/groupdiv.js';
+import { custom } from './types/custom.js';
 
-export const WHEEL_TYPES = { simple, topicgroup, groupdiv };
+export const WHEEL_TYPES = { simple, topicgroup, groupdiv, custom };
