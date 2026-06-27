@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { landingRotation, discHtml } from '../wheel-types.js';
+import { landingRotation, discHtml } from '../public/engine/index.js';
 
 // With zero jitter, the pointer (top = 0deg) must sit at segment idx's center.
 test('landingRotation centers the target segment under the top pointer', () => {

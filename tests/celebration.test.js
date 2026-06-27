@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { burst, chime } from '../wheel-types.js';
+import { burst, chime } from '../public/engine/index.js';
 
 test('chime is a no-op and does not throw without an audio context', () => {
   assert.doesNotThrow(() => chime(null));

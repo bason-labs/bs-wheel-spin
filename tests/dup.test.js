@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { stripVN, findDuplicate } from '../wheel-types.js';
+import { stripVN, findDuplicate } from '../public/engine/index.js';
 
 test('stripVN normalizes Vietnamese diacritics + case + spacing', () => {
   assert.equal(stripVN('  Nguyễn   Văn  An '), 'nguyen van an');
