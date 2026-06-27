@@ -15,7 +15,7 @@ modules natively.
 | `/` | `public/wheel.html` (rewrite) | Home: the 8-group / 13-topic `topicgroup` wheel (config `wheels/home`) |
 | `/groups` | `public/groups.html` (rewrite) | The original standalone people-splitter |
 | `/wheel.html?w=<id>` | `public/wheel.html` | Any wheel, by its id |
-| `/admin` | `public/admin.html` | PIN-gated config dashboard — **built in SP4 (not present yet)** |
+| `/admin` | `public/admin.html` | PIN-gated config dashboard — create / edit / delete / reset wheels of any type |
 
 Routing is configured in `firebase.json` (`hosting.rewrites`). `public/groups.html` is a
 self-contained legacy page; it does not import the engine.
@@ -66,11 +66,13 @@ Current types:
 public/
   wheel.html          # generic participant page (imports ./engine/index.js)
   groups.html         # original standalone splitter (no engine import)
+  admin.html          # PIN-gated config dashboard
   engine/
     index.js          # barrel — the public import surface
     helpers.js        # esc, deviceId, makeWheelId, stripVN, findDuplicate
     geometry.js       # PALETTE, landingRotation, discHtml
     celebration.js    # chime, burst
+    adminforms.js     # config-form render/read for the admin page
     registry.js       # assembles WHEEL_TYPES from the type modules
     types/
       simple.js
@@ -93,10 +95,16 @@ Python 3 (for a local static server), and optionally the Firebase CLI (for deplo
 npm test                       # run all unit tests (node --test)
 python3 -m http.server 8123    # serve the repo; then open:
 #   http://localhost:8123/public/wheel.html?w=<id>
+#   http://localhost:8123/public/admin.html        (PIN: see ADMIN_PIN in admin.html)
 ```
 
-`?seed=<type>` (e.g. `?seed=topicgroup`) seeds a demo config for a fresh wheel id — a
-**dev-only** affordance that writes to the live database, so use throwaway ids.
+Wheels are created from the `/admin` dashboard (the old `?seed=` dev path is gone).
+
+**Local DB (no production writes):** pages support an opt-in `?emu=1` that points them at
+a local Realtime Database emulator (`firebase emulators:start --only database`, port 9000).
+The emulator requires JDK 21+. Production never passes `?emu=1`. For offline UI testing
+without Firebase or Java, `admin.html` honours an injected `window.__WHEEL_STORE__`
+in-memory store (set before unlocking); it is inert in production.
 
 ## Deploy
 
@@ -112,6 +120,8 @@ on `*.js`/`*.html` (and `/`, `/groups`) so updates reach users immediately.
 
 ## Admin & PIN
 
-`/admin` (built in SP4) is gated by a shared client-side PIN. The PIN hides the
-dashboard from casual visitors and deters accidental edits; because the database rules
-are open, it is **not** a real security boundary.
+`/admin` is gated by a shared client-side PIN — the editable `ADMIN_PIN` constant at the
+top of `public/admin.html`. The PIN hides the dashboard from casual visitors and deters
+accidental edits; because the database rules are open, it is **not** a real security
+boundary. The dashboard lists every wheel, creates one of any type from a generated form,
+edits (including the `home` wheel), copies the participant link, resets draws, and deletes.
