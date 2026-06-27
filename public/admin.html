@@ -18,7 +18,8 @@
   h1{font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.5px;}
   h2{font-size:18px;font-weight:800;margin-bottom:12px;}
   .wrap{max-width:680px;margin:0 auto;}
-  .muted{opacity:.55;font-size:14px;margin-top:18px;text-align:center;}
+  .muted{opacity:.7;font-size:14px;margin-top:18px;text-align:center;line-height:1.6;}
+  .muted code{background:rgba(255,255,255,.12);padding:1px 6px;border-radius:5px;font-size:12px;}
 
   /* PIN screen */
   .pinscreen{min-height:80vh;display:flex;align-items:center;justify-content:center;}
@@ -160,7 +161,7 @@ function unlock() {
 /* ---------- store ---------- */
 function makeFirebaseStore(db) {
   return {
-    listWheels: cb => onValue(ref(db, 'wheels'), s => cb(s.val() || {})),
+    listWheels: (cb, errCb) => onValue(ref(db, 'wheels'), s => cb(s.val() || {}), errCb),
     getConfig:  id => get(ref(db, `wheels/${id}/config`)).then(s => s.val()),
     saveConfig: (id, c) => set(ref(db, `wheels/${id}/config`), c),
     resetDraws: id => remove(ref(db, `wheels/${id}/state`)),
@@ -169,7 +170,15 @@ function makeFirebaseStore(db) {
 }
 
 function startDashboard() {
-  store.listWheels(w => { current = w; renderList(w); });
+  listEl.innerHTML = `<p class="muted">⏳ Đang tải danh sách vòng quay...</p>`;
+  store.listWheels(
+    w => { current = w; renderList(w); },
+    err => {
+      listEl.innerHTML = `<p class="muted">⚠️ Không đọc được danh sách vòng quay.<br>
+        ${esc((err && err.message) || 'Lỗi không xác định')}<br><br>
+        Thường do quyền database chưa cho đọc cả nhánh <code>wheels</code> — cần cập nhật <code>database.rules.json</code> (thêm <code>".read": true</code> ở <code>wheels</code>) rồi <code>firebase deploy --only database</code>.</p>`;
+    }
+  );
 }
 
 /* ---------- dashboard list ---------- */
