@@ -1,6 +1,6 @@
 {
   "rules": {
     "wheel":  { "$room": { ".read": true, ".write": true } },
-    "wheels": { "$id":   { ".read": true, ".write": true } }
+    "wheels": { ".read": true, "$id": { ".read": true, ".write": true } }
   }
 }
