@@ -24,7 +24,7 @@
         "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
       },
       {
-        "source": "@(/|/groups)",
+        "source": "@(/|/admin|/groups)",
         "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
       }
     ]
