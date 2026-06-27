@@ -112,10 +112,12 @@ let db = null, uid = null, T = null, config = null, state = {},
 
 const HEXt = /^#[0-9a-fA-F]{6}$/;
 function applyTheme(theme) {
-  if (!theme) { soundOn = true; return; }
-  soundOn = theme.sound !== false;
-  if (theme.accent && HEXt.test(theme.accent)) document.documentElement.style.setProperty('--gold', theme.accent);
-  if (theme.bg && HEXt.test(theme.bg)) {
+  // Reset to CSS defaults first so an edited/removed theme doesn't linger on a live update.
+  document.documentElement.style.removeProperty('--gold');
+  document.body.style.background = '';
+  soundOn = !(theme && theme.sound === false);
+  if (theme && theme.accent && HEXt.test(theme.accent)) document.documentElement.style.setProperty('--gold', theme.accent);
+  if (theme && theme.bg && HEXt.test(theme.bg)) {
     const accent = (theme.accent && HEXt.test(theme.accent)) ? theme.accent : '#10b981';
     document.body.style.background =
       `radial-gradient(900px 500px at 12% -5%, ${accent}33, transparent 60%),` +
