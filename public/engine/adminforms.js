@@ -1,16 +1,8 @@
 /* engine/adminforms.js — pure config-form rendering + reading for the admin page.
-   No Firebase, no top-level DOM. Field kinds: text, number, bool, list, groups. */
+   No Firebase, no top-level DOM. Field kinds: text, number, bool, list, groups, color, segments (+ theme section). */
 import { esc } from './helpers.js';
-
-export function darken(hex) {
-  const m = /^#([0-9a-fA-F]{6})$/.exec(String(hex));
-  if (!m) return '#000000';
-  const n = parseInt(m[1], 16);
-  const r = Math.max(0, ((n >> 16) & 255) - 40);
-  const g = Math.max(0, ((n >> 8) & 255) - 40);
-  const b = Math.max(0, (n & 255) - 40);
-  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
-}
+import { darken } from './geometry.js';
+export { darken };   // re-exported so importers of adminforms keep working
 
 export function groupsFromRows(rows) {
   return rows.map((row, i) => ({

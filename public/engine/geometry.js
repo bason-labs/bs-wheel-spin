@@ -36,3 +36,15 @@ export const PALETTE = [
   { color: '#3b82f6', dark: '#2563eb' }, { color: '#ef4444', dark: '#dc2626' },
   { color: '#14b8a6', dark: '#0d9488' }, { color: '#a855f7', dark: '#9333ea' },
 ];
+
+// A darker shade of a #rrggbb colour (used by types to derive a segment's dark edge,
+// and by the admin form to derive a group/segment's dark from a picked colour).
+export function darken(hex) {
+  const m = /^#([0-9a-fA-F]{6})$/.exec(String(hex));
+  if (!m) return '#000000';
+  const n = parseInt(m[1], 16);
+  const r = Math.max(0, ((n >> 16) & 255) - 40);
+  const g = Math.max(0, ((n >> 8) & 255) - 40);
+  const b = Math.max(0, (n & 255) - 40);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
